@@ -122,6 +122,8 @@ void run( const gchar* name,
     // Check to see if this is the load procedure
     if ( strcmp( name, LOAD_PROCEDURE ) == 0 )
     {
+        OutputDebugString( L"[WIC_Plugin] LOAD_PROCEDURE is called" );
+        
         // Check to make sure all parameters were supplied
         if ( nparams != 3 )
         {
@@ -147,6 +149,8 @@ void run( const gchar* name,
     }
     else
     {
+        OutputDebugString( L"[WIC_Plugin] Unsupported procedure is called!" );
+        
         return_values[0].data.d_status = GIMP_PDB_CALLING_ERROR;
     }
 }
