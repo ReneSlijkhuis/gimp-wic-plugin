@@ -106,7 +106,7 @@ int GetImageData( const char* filename,
                   void** frameBuffer,
                   UINT* frameBufferSize )
 {
-    int success = -1;
+    HRESULT hr = S_OK;
     
     CoInitialize( nullptr );
     {
@@ -115,79 +115,69 @@ int GetImageData( const char* filename,
         CComPtr<IWICBitmapFrameDecode> pFrame;
         CComPtr<IWICFormatConverter> pWicFormatConverter;
 
-        if ( CoCreateInstance( CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_IWICImagingFactory, (LPVOID*)&pFactory ) == S_OK )
+        if ( hr == S_OK )
         {
-            if ( pFactory->CreateDecoderFromFilename( ToWideString( filename ).c_str( ), NULL, GENERIC_READ, WICDecodeMetadataCacheOnDemand, &pDecoder ) == S_OK )
-            {
-                if ( pDecoder->GetFrameCount( frameCount ) == S_OK )
-                {                
-                    if ( pDecoder->GetFrame( frameIndex, &pFrame ) == S_OK )
-                    {
-                        if ( pFrame->GetSize( frameWidth, frameHeight ) == S_OK )
-                        {
-                            if ( pFactory->CreateFormatConverter( &pWicFormatConverter ) == S_OK )
-                            {
-                                if ( pWicFormatConverter->Initialize( pFrame,                                   // Input bitmap to convert
-                                                                      GUID_WICPixelFormat24bppRGB,              // Destination pixel format
-                                                                      WICBitmapDitherTypeNone,                  // Specified dither pattern
-                                                                      nullptr,                                  // Specify a particular palette 
-                                                                      0.f,                                      // Alpha threshold
-                                                                      WICBitmapPaletteTypeCustom ) == S_OK )    // Palette translation type
-                                {
-                                    const UINT bytesPerPixel = 3;
-                                    UINT stride = *frameWidth * bytesPerPixel;
-                                    *frameBufferSize = *frameWidth * *frameHeight * bytesPerPixel;
-        
-                                    *frameBuffer = malloc( *frameBufferSize );
-                                    if ( pWicFormatConverter->CopyPixels( NULL, stride, *frameBufferSize, static_cast<BYTE*>( *frameBuffer ) ) == S_OK )
-                                    {
-                                        success = 0;
-                                    }
-                                    else
-                                    {
-                                        OutputDebugString( L"[WIC_Plugin] IWICFormatConverter->CopyPixels( ) Failed!" );
-                                    }
-                                }
-                                else
-                                {
-                                    OutputDebugString( L"[WIC_Plugin] IWICFormatConverter->Initialize( ) Failed!" );
-                                }
-                            }
-                            else
-                            {
-                                OutputDebugString( L"[WIC_Plugin] IWICImagingFactory->CreateFormatConverter( ) Failed!" );
-                            }
-                        }
-                        else
-                        {
-                            OutputDebugString( L"[WIC_Plugin] IWICBitmapFrameDecode->GetSize( ) Failed!" );
-                        }
-                    }
-                    else
-                    {
-                        OutputDebugString( L"[WIC_Plugin] IWICBitmapDecoder->GetFrame( ) Failed!" );
-                    }
-                }
-                else
-                {
-                    OutputDebugString( L"[WIC_Plugin] IWICBitmapDecoder->GetFrameCount( ) Failed!" );
-                }
-            }
-            else
-            {
-                OutputDebugString( L"[WIC_Plugin] IWICImagingFactory->CreateDecoderFromFilename( ) Failed!" );
-            }
+            hr = CoCreateInstance( CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_IWICImagingFactory, (LPVOID*)&pFactory );
+            if ( hr != S_OK ) OutputDebugString( L"[WIC_Plugin] CoCreateInstance( CLSID_WICImagingFactor ) Failed!" );
         }
-        else
+
+        if ( hr == S_OK )
         {
-            OutputDebugString( L"[WIC_Plugin] CoCreateInstance( CLSID_WICImagingFactor ) Failed!" );
+            hr = pFactory->CreateDecoderFromFilename( ToWideString( filename ).c_str( ), NULL, GENERIC_READ, WICDecodeMetadataCacheOnDemand, &pDecoder );
+            if ( hr != S_OK ) OutputDebugString( L"[WIC_Plugin] IWICImagingFactory->CreateDecoderFromFilename( ) Failed!" );
+        }
+
+        if ( hr == S_OK )
+        {
+            hr = pDecoder->GetFrameCount( frameCount );
+            if ( hr != S_OK ) OutputDebugString( L"[WIC_Plugin] IWICBitmapDecoder->GetFrameCount( ) Failed!" );
+        }
+
+        if ( hr == S_OK )
+        {
+            hr = pDecoder->GetFrame( frameIndex, &pFrame );
+            if ( hr != S_OK ) OutputDebugString( L"[WIC_Plugin] IWICBitmapDecoder->GetFrame( ) Failed!" );
+        }
+
+        if ( hr == S_OK )
+        {
+            hr = pFrame->GetSize( frameWidth, frameHeight );
+            if ( hr != S_OK ) OutputDebugString( L"[WIC_Plugin] IWICBitmapFrameDecode->GetSize( ) Failed!" );
+        }
+
+        if ( hr == S_OK )
+        {
+            hr = pFactory->CreateFormatConverter( &pWicFormatConverter );
+            if ( hr != S_OK ) OutputDebugString( L"[WIC_Plugin] IWICImagingFactory->CreateFormatConverter( ) Failed!" );
+        }
+ 
+        if ( hr == S_OK )
+        {
+            hr = pWicFormatConverter->Initialize( pFrame,                       // Input bitmap to convert
+                                                  GUID_WICPixelFormat24bppRGB,  // Destination pixel format
+                                                  WICBitmapDitherTypeNone,      // Specified dither pattern
+                                                  nullptr,                      // Specify a particular palette 
+                                                  0.f,                          // Alpha threshold
+                                                  WICBitmapPaletteTypeCustom ); // Palette translation type
+            if ( hr != S_OK ) OutputDebugString( L"[WIC_Plugin] IWICFormatConverter->Initialize( ) Failed!" );
+        }
+
+        if ( hr == S_OK )
+        {
+            const UINT bytesPerPixel = 3;
+            UINT stride = *frameWidth * bytesPerPixel;
+            *frameBufferSize = *frameWidth * *frameHeight * bytesPerPixel;
+
+            *frameBuffer = malloc( *frameBufferSize );
+            hr = pWicFormatConverter->CopyPixels( NULL, stride, *frameBufferSize, static_cast<BYTE*>( *frameBuffer ) );
+            if ( hr != S_OK ) OutputDebugString( L"[WIC_Plugin] IWICFormatConverter->CopyPixels( ) Failed!" );
         }
 
         // Note: the WIC COM pointers should be released before 'CoUninitialize( )' is called.
     }
     CoUninitialize( );
 
-    return success;
+    return ( hr == S_OK ) ? 0 : -1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
