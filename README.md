@@ -8,11 +8,11 @@ The binary distribution can be found at the following location:
 
 ![procedure browser](http://www.xs4all.nl/~reneslkh/gimp/procedure_browser.png)
 
-# Simple WIC examples
+## Simple WIC examples
 If you’re mainly interested in some simple WIC examples, please have a look at:  
 [example-wic-applications](https://github.com/ReneSlijkhuis/example-wic-applications)  
   
 This repository contains a few example applications, which should help you in getting started...
 
-# License
+## License
 Released under the [MIT license](https://en.wikipedia.org/wiki/MIT_License).
