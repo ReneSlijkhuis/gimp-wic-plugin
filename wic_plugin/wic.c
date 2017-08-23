@@ -85,7 +85,8 @@ int read_wic( const char* filename )
             gimp_drawable_detach( pDrawable );
 
             // Add the layer to the image
-            gimp_image_add_layer( imageId, layerId, addedLayers );
+            gimp_image_insert_layer( imageId, layerId, 0, addedLayers );
+
             addedLayers++;
         }
     }
