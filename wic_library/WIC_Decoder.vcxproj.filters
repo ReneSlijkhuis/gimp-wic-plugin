@@ -19,6 +19,9 @@
     <ClCompile Include="Utilities\WicUtilities.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
+    <ClCompile Include="Utilities\ConfigFile.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WIC_Decoder.h" />
@@ -29,6 +32,9 @@
       <Filter>Utilities</Filter>
     </ClInclude>
     <ClInclude Include="Utilities\WicUtilities.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\ConfigFile.h">
       <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>

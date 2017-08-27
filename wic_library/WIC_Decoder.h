@@ -45,6 +45,7 @@ DllInterface int GetImageData( const char* filename,
                                UINT* frameHeight,
                                void** frameBuffer,
                                UINT* frameBufferSize );
+DllInterface int GetDisplayName( char* name, const int bufferSize );
 
 #ifdef __cplusplus  
 }  

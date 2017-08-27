@@ -35,18 +35,28 @@
 #include "WIC_Decoder.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// How to write a GIMP plug-in
+// https://developer.gimp.org/writing-a-plug-in/1/
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
+#define DISPLAY_NAME_MAX_SIZE ( 32 )
 
 const char LOAD_PROCEDURE[] = "file-wic-load";
 const char BINARY_NAME[]    = "file-wic";
 
 // Predeclare our entrypoints
-void query( );
+void init( void );
+void query( void );
 void run( const gchar*, gint, const GimpParam*, gint*, GimpParam** );
 
 // Declare our plugin entry points
 GimpPlugInInfo PLUG_IN_INFO =
 {
-    NULL,
+    init,
     NULL,
     query,
     run
@@ -58,8 +68,14 @@ MAIN( )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void query( )
+// The init() function is called each time The GIMP starts up.
+
+void init( void )
 {
+    // Register the plug-in again since the configuration file can be changed.
+    // This is normally done in the query() function but that one is only called when the 
+    // plug-in itself has changed.
+
     // Load arguments
     static const GimpParamDef load_arguments[] =
     {
@@ -73,7 +89,13 @@ void query( )
     {
         { GIMP_PDB_IMAGE, "image", "Output image" }
     };
-
+    
+    char displayName[ DISPLAY_NAME_MAX_SIZE ] = { 0 };
+    if ( display_name( displayName, DISPLAY_NAME_MAX_SIZE ) < 0 )
+    {
+        sprintf_s( displayName, DISPLAY_NAME_MAX_SIZE, "WIC Supported images" );
+    }
+    
     // Install the load procedure
     gimp_install_procedure( LOAD_PROCEDURE,                                                         // name
                             "Loads all images supported by the Windows Imaging Component (WIC)",    // blurb
@@ -81,7 +103,7 @@ void query( )
                             "Rene Slijkhuis",                                                       // author
                             "Rene Slijkhuis",                                                       // copyright
                             "2017",                                                                 // date
-                            "WIC Supported images",                                                 // menu label
+                            displayName,                                                            // menu label
                             NULL,                                                                   // image types
                             GIMP_PLUGIN,                                                            // type
                             G_N_ELEMENTS( load_arguments ),                                         // n params
@@ -104,6 +126,17 @@ void query( )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// The query() function is called the first time the plug-in is present, and then each time the plug-in changes. 
+
+void query( void )
+{
+    // Normally GIMP plug-ins are registered here.
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// The run() function is the plug-in's centrepiece. It is called when the plug-in is asked to run.
+
 void run( const gchar* name,
           gint nparams,
           const GimpParam* param,
@@ -122,8 +155,6 @@ void run( const gchar* name,
     // Check to see if this is the load procedure
     if ( strcmp( name, LOAD_PROCEDURE ) == 0 )
     {
-        OutputDebugString( L"[WIC_Plugin] LOAD_PROCEDURE is called" );
-        
         // Check to make sure all parameters were supplied
         if ( nparams != 3 )
         {

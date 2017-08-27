@@ -86,6 +86,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Utilities\ConfigFile.h" />
     <ClInclude Include="Utilities\StringUtilities.h" />
     <ClInclude Include="Utilities\WicUtilities.h" />
     <ClInclude Include="WIC_Decoder.h" />
@@ -94,6 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Utilities\ConfigFile.cpp" />
     <ClCompile Include="Utilities\StringUtilities.cpp" />
     <ClCompile Include="Utilities\WicUtilities.cpp" />
     <ClCompile Include="WIC_Decoder.cpp" />

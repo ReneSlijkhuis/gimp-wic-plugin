@@ -41,6 +41,7 @@
 #include "WIC_Decoder.h"
 #include "Utilities/StringUtilities.h"
 #include "Utilities/WicUtilities.h"
+#include "Utilities/ConfigFile.h"
 
 using namespace std;
 using namespace Gimp::Plugin::Utilities;
@@ -48,7 +49,7 @@ using namespace Gimp::Plugin::Utilities;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 char* GetSupportedExtensions( )
-{
+{   
     Wic wic;
     wstring ext;
     vector<wstring> extensions;    
@@ -63,6 +64,7 @@ char* GetSupportedExtensions( )
         }
     }
 
+    ConfigFile config;
     istringstream stream( ToString( ext ) );
     string line;   
 
@@ -71,9 +73,13 @@ char* GetSupportedExtensions( )
         wstring extension = ToWideString( ToLower( line ).c_str( ) );
                        
         if ( ( static_cast<UINT>( extension.length( ) ) > 1 ) &&
-                ( extension[ 0 ] == '.' ) )
+             ( extension[ 0 ] == '.' ) )
         {          
-            extensions.push_back( extension.erase( 0, 1 ) ); // Add extension without leading dot.
+            wstring ext = extension.erase( 0, 1 );
+            if ( !config.IsExtensionExcluded( ext ) )
+            {
+                extensions.push_back( ext ); // Add extension without leading dot.
+            }
         }
     }
  
@@ -91,6 +97,7 @@ char* GetSupportedExtensions( )
 
     int size = static_cast<int>( extensionList.size( ) );
     char* pBuffer = static_cast<char*>( malloc( sizeof(char) * ( size + 1 ) ) );
+    memset( pBuffer, NULL, sizeof(char) * ( size + 1 ) );
     memcpy( pBuffer, extensionList.c_str( ), size );
 
     return pBuffer;
@@ -178,6 +185,28 @@ int GetImageData( const char* filename,
     CoUninitialize( );
 
     return ( hr == S_OK ) ? 0 : -1;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int GetDisplayName( char* name, const int bufferSize )
+{
+    if ( name == nullptr ) return -1;
+    
+    ConfigFile config;
+    wstring displayName;
+    if ( config.GetDisplayName( displayName ) )
+    {
+        if ( displayName.length( ) >= bufferSize )
+        {
+            return -1;
+        }
+        
+        sprintf_s( name, bufferSize, "%s\0", ToString( displayName ).c_str( ) );
+        return 0;
+    }
+
+    return -1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
